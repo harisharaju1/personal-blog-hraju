@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  button,
+  [role="button"],
+  a,
+  label[for],
+  select {
+    cursor: pointer;
+  }
+}
