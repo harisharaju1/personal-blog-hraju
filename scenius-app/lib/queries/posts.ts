@@ -2,7 +2,6 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { type SortKey } from '@/lib/sorting'
-import type { VoteValue } from '@/lib/voting'
 
 export type { SortKey }
 
@@ -17,6 +16,9 @@ export type PostWithAuthor = {
 }
 
 const SELECT_FIELDS = 'id, title, body, score, created_at, author_id, profiles!posts_author_id_fkey(username)' as const
+
+// Set via BLOG_AUTHOR_USER_ID in .env.local / Vercel env vars (Supabase user UUID)
+const BLOG_AUTHOR_USER_ID = process.env.BLOG_AUTHOR_USER_ID ?? ''
 
 function mapRow(row: {
   id: number | null
@@ -46,6 +48,7 @@ export async function listPosts(sort: SortKey = 'hot'): Promise<PostWithAuthor[]
     const { data } = await supabase
       .from('posts_hot')
       .select(SELECT_FIELDS)
+      .eq('author_id', BLOG_AUTHOR_USER_ID)
       .order('hot_rank', { ascending: false })
       .limit(50)
     return (data ?? []).map(mapRow)
@@ -55,6 +58,7 @@ export async function listPosts(sort: SortKey = 'hot'): Promise<PostWithAuthor[]
     const { data } = await supabase
       .from('posts')
       .select(SELECT_FIELDS)
+      .eq('author_id', BLOG_AUTHOR_USER_ID)
       .order('score', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(50)
@@ -65,6 +69,7 @@ export async function listPosts(sort: SortKey = 'hot'): Promise<PostWithAuthor[]
   const { data } = await supabase
     .from('posts')
     .select(SELECT_FIELDS)
+    .eq('author_id', BLOG_AUTHOR_USER_ID)
     .order('created_at', { ascending: false })
     .limit(50)
   return (data ?? []).map(mapRow)
@@ -79,36 +84,4 @@ export async function getPostById(id: number): Promise<PostWithAuthor | null> {
     .single()
   if (!data) return null
   return mapRow(data)
-}
-
-export async function getUserVotesForPosts(
-  userId: string,
-  postIds: number[],
-): Promise<Map<number, VoteValue>> {
-  if (postIds.length === 0) return new Map()
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('votes')
-    .select('post_id, value')
-    .eq('user_id', userId)
-    .in('post_id', postIds)
-  const map = new Map<number, VoteValue>()
-  for (const row of data ?? []) {
-    map.set(row.post_id, row.value as VoteValue)
-  }
-  return map
-}
-
-export async function getUserVoteForPost(
-  userId: string,
-  postId: number,
-): Promise<VoteValue | null> {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('votes')
-    .select('value')
-    .eq('user_id', userId)
-    .eq('post_id', postId)
-    .maybeSingle()
-  return (data?.value ?? null) as VoteValue | null
 }

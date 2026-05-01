@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { PostCard } from '@/components/posts/post-card'
-import { createClient } from '@/lib/supabase/server'
 import { listPosts } from '@/lib/queries/posts'
 import { isValidSortKey, VALID_SORT_KEYS } from '@/lib/sorting'
 
@@ -12,16 +11,11 @@ export default async function HomePage({
   const { sort: rawSort } = await searchParams
   const sort = isValidSortKey(rawSort) ? rawSort : 'hot'
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
   const posts = await listPosts(sort)
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4">
         <nav className="flex text-sm">
           {VALID_SORT_KEYS.map((s) => (
             <Link
@@ -35,11 +29,6 @@ export default async function HomePage({
             </Link>
           ))}
         </nav>
-        {user && (
-          <Link href="/posts/new" className="text-sm font-medium hover:underline">
-            + new post
-          </Link>
-        )}
       </div>
 
       <div className="space-y-2">

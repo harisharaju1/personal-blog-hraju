@@ -1,12 +1,6 @@
 import { notFound } from 'next/navigation'
-import { DeleteButton } from '@/components/posts/delete-button'
-import { VoteButtons } from '@/components/posts/vote-buttons'
-import { CommentForm } from '@/components/posts/comment-form'
 import { PostBody } from '@/components/posts/post-body'
-import { createClient } from '@/lib/supabase/server'
-import { getPostById, getUserVoteForPost } from '@/lib/queries/posts'
-import { getCommentsByPostId } from '@/lib/queries/comments'
-import type { VoteValue } from '@/lib/voting'
+import { getPostById } from '@/lib/queries/posts'
 
 export default async function PostPage({
   params,
@@ -17,17 +11,8 @@ export default async function PostPage({
   const postId = parseInt(id, 10)
   if (isNaN(postId)) notFound()
 
-  const [post, supabase] = await Promise.all([getPostById(postId), createClient()])
+  const post = await getPostById(postId)
   if (!post) notFound()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const [userVote, comments] = await Promise.all([
-    user ? getUserVoteForPost(user.id, postId) : Promise.resolve(null as VoteValue | null),
-    getCommentsByPostId(postId),
-  ])
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
@@ -41,39 +26,7 @@ export default async function PostPage({
         </div>
 
         {post.body && <PostBody body={post.body} />}
-
-        <div className="flex items-center gap-4 border-t pt-4">
-          <VoteButtons postId={post.id} initialScore={post.score} userVote={userVote} />
-          {user?.id === post.author_id && <DeleteButton postId={post.id} />}
-        </div>
       </article>
-
-      <section className="mt-8 space-y-6">
-        <h2 className="font-semibold">
-          {comments.length === 0 ? 'No comments yet' : `${comments.length} comment${comments.length === 1 ? '' : 's'}`}
-        </h2>
-
-        {comments.length > 0 && (
-          <ul className="space-y-4">
-            {comments.map((c) => (
-              <li key={c.id} className="rounded-md border p-4">
-                <p className="mb-1 text-xs text-neutral-500">
-                  {c.author_username} &middot; {new Date(c.created_at).toLocaleDateString()}
-                </p>
-                <p className="whitespace-pre-wrap text-sm">{c.body}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {user ? (
-          <CommentForm postId={post.id} />
-        ) : (
-          <p className="text-sm text-neutral-500">
-            <a href="/login" className="underline underline-offset-2">Log in</a> to leave a comment.
-          </p>
-        )}
-      </section>
     </main>
   )
 }
