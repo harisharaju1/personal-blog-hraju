@@ -24,6 +24,45 @@ export async function logoutAction() {
   redirect('/admin/login')
 }
 
+export async function updatePostAction(postId: number, formData: FormData): Promise<ActionResult<{ id: number }>> {
+  const parsed = postInput.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return fail(
+      parsed.error.issues.map((i) => ({ field: String(i.path[0] ?? 'root'), message: i.message })),
+    )
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user || user.id !== process.env.BLOG_AUTHOR_USER_ID) {
+    return fail([{ field: 'root', message: 'Unauthorized' }])
+  }
+
+  const { error } = await supabase
+    .from('posts')
+    .update({ title: parsed.data.title, body: parsed.data.body })
+    .eq('id', postId)
+    .eq('author_id', user.id)
+
+  if (error) {
+    return fail([{ field: 'root', message: 'Failed to update post' }])
+  }
+
+  // Record any newly embedded image paths (best-effort; orphaned paths are not removed here).
+  const imagePaths = extractStoragePaths(parsed.data.body, bucketBase())
+  if (imagePaths.length > 0) {
+    await supabase
+      .from('post_images')
+      .upsert(imagePaths.map((storage_path) => ({ post_id: postId, storage_path })), {
+        onConflict: 'post_id,storage_path',
+        ignoreDuplicates: true,
+      })
+  }
+
+  return ok({ id: postId })
+}
+
 export async function createPostAction(formData: FormData): Promise<ActionResult<{ id: number }>> {
   const parsed = postInput.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {

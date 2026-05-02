@@ -4,6 +4,7 @@ import { PostBody } from '@/components/posts/post-body'
 import { getPostById } from '@/lib/queries/posts'
 import { readingTime, excerpt } from '@/lib/text'
 import { SITE_URL, SITE_TITLE, SITE_AUTHOR } from '@/lib/config'
+import { createClient } from '@/lib/supabase/server'
 
 type PageProps = { params: Promise<{ id: string }> }
 
@@ -43,6 +44,10 @@ export default async function PostPage({ params }: PageProps) {
   const post = await getPostById(postId)
   if (!post) notFound()
 
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const isAuthor = user?.id === process.env.BLOG_AUTHOR_USER_ID
+
   const postUrl = `${SITE_URL}/posts/${post.id}`
   const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(postUrl)}`
   const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`
@@ -81,24 +86,34 @@ export default async function PostPage({ params }: PageProps) {
 
         {post.body && <PostBody body={post.body} />}
 
-        <div className="flex items-center gap-3 border-t pt-6 text-sm text-neutral-500">
-          <span>Share:</span>
-          <a
-            href={tweetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
-          >
-            X / Twitter
-          </a>
-          <a
-            href={linkedInUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
-          >
-            LinkedIn
-          </a>
+        <div className="flex items-center justify-between border-t pt-6">
+          <div className="flex items-center gap-3 text-sm text-neutral-500">
+            <span>Share:</span>
+            <a
+              href={tweetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
+            >
+              X / Twitter
+            </a>
+            <a
+              href={linkedInUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
+            >
+              LinkedIn
+            </a>
+          </div>
+          {isAuthor && (
+            <a
+              href={`/admin/edit/${post.id}`}
+              className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+            >
+              Edit
+            </a>
+          )}
         </div>
       </article>
     </main>

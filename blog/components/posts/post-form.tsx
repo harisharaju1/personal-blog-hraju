@@ -4,16 +4,22 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { useForm } from 'react-hook-form'
-import { createPostAction } from '@/lib/actions/admin'
+import { createPostAction, updatePostAction } from '@/lib/actions/admin'
 import { postInput, type PostInput } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RichBodyEditor } from '@/components/posts/rich-body-editor'
 
-export function PostForm() {
+interface PostFormProps {
+  initialPost?: { id: number; title: string; body: string }
+}
+
+export function PostForm({ initialPost }: PostFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const isEditing = !!initialPost
+
   const {
     register,
     handleSubmit,
@@ -23,7 +29,10 @@ export function PostForm() {
     formState: { errors },
   } = useForm<PostInput>({
     resolver: zodResolver(postInput),
-    defaultValues: { title: '', body: '' },
+    defaultValues: {
+      title: initialPost?.title ?? '',
+      body: initialPost?.body ?? '',
+    },
   })
 
   const body = watch('body')
@@ -34,7 +43,10 @@ export function PostForm() {
     fd.set('body', data.body)
 
     startTransition(async () => {
-      const result = await createPostAction(fd)
+      const result = isEditing
+        ? await updatePostAction(initialPost.id, fd)
+        : await createPostAction(fd)
+
       if (!result.ok) {
         result.errors.forEach(({ field, message }) => {
           if (field === 'title' || field === 'body') {
@@ -70,7 +82,9 @@ export function PostForm() {
       {errors.root && <p className="text-sm text-red-500">{errors.root.message}</p>}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? 'Posting…' : 'Publish'}
+        {isPending
+          ? isEditing ? 'Saving…' : 'Posting…'
+          : isEditing ? 'Save changes' : 'Publish'}
       </Button>
     </form>
   )
