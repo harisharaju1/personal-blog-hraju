@@ -1,5 +1,10 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* rehype-pretty-code v0.14+ dual-theme via CSS variables */
+pre[data-theme] code span { color: var(--shiki-light); }
+.dark pre[data-theme] code span { color: var(--shiki-dark); }
 
 @layer base {
   button,

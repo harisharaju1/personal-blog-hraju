@@ -8,7 +8,20 @@ export function Header() {
         <Link href="/" className="text-lg font-bold">
           hraju.dev
         </Link>
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex items-center gap-4 text-sm">
+          <Link
+            href="/about"
+            className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors"
+          >
+            About
+          </Link>
+          <a
+            href="/feed.xml"
+            className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors"
+            aria-label="RSS feed"
+          >
+            RSS
+          </a>
           <ThemeToggle />
         </nav>
       </div>
