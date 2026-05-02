@@ -33,7 +33,7 @@ export default function AboutPage() {
             GitHub
           </a>
           <a
-            href="https://linkedin.com/in/harisharaju"
+            href="https://linkedin.com/in/harish-raju"
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 dark:text-blue-400 underline underline-offset-2 hover:text-blue-800 dark:hover:text-blue-300"
