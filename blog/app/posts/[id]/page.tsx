@@ -11,7 +11,7 @@ type PageProps = { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
   const post = await getPostById(parseInt(id, 10))
-  if (!post) return {}
+  if (!post || post.visibility === 'draft') return {}
 
   const description = excerpt(post.body, 160)
   const url = `${SITE_URL}/posts/${post.id}`
@@ -41,12 +41,13 @@ export default async function PostPage({ params }: PageProps) {
   const postId = parseInt(id, 10)
   if (isNaN(postId)) notFound()
 
-  const post = await getPostById(postId)
-  if (!post) notFound()
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const isAuthor = user?.id === process.env.BLOG_AUTHOR_USER_ID
+
+  const post = await getPostById(postId)
+  if (!post) notFound()
+  if (post.visibility === 'draft' && !isAuthor) notFound()
 
   const postUrl = `${SITE_URL}/posts/${post.id}`
   const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(postUrl)}`
@@ -72,7 +73,14 @@ export default async function PostPage({ params }: PageProps) {
     <main className="mx-auto max-w-3xl px-4 py-6">
       <article className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold">{post.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold">{post.title}</h1>
+            {post.visibility === 'draft' && (
+              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                Draft
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm text-neutral-500">
             {new Date(post.created_at).toLocaleDateString('en-US', {
               year: 'numeric',

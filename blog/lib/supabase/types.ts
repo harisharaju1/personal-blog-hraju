@@ -130,6 +130,7 @@ export type Database = {
           score: number
           title: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           author_id: string
@@ -139,6 +140,7 @@ export type Database = {
           score?: number
           title: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           author_id?: string
@@ -148,6 +150,7 @@ export type Database = {
           score?: number
           title?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -232,6 +235,7 @@ export type Database = {
           score: number | null
           title: string | null
           updated_at: string | null
+          visibility: string | null
         }
         Insert: {
           author_id?: string | null
@@ -242,6 +246,7 @@ export type Database = {
           score?: number | null
           title?: string | null
           updated_at?: string | null
+          visibility?: string | null
         }
         Update: {
           author_id?: string | null
@@ -252,6 +257,7 @@ export type Database = {
           score?: number | null
           title?: string | null
           updated_at?: string | null
+          visibility?: string | null
         }
         Relationships: [
           {

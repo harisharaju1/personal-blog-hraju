@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { RichBodyEditor } from '@/components/posts/rich-body-editor'
 
 interface PostFormProps {
-  initialPost?: { id: number; title: string; body: string }
+  initialPost?: { id: number; title: string; body: string; visibility: string }
 }
 
 export function PostForm({ initialPost }: PostFormProps) {
@@ -32,6 +32,7 @@ export function PostForm({ initialPost }: PostFormProps) {
     defaultValues: {
       title: initialPost?.title ?? '',
       body: initialPost?.body ?? '',
+      visibility: (initialPost?.visibility as 'public' | 'draft') ?? 'public',
     },
   })
 
@@ -41,6 +42,7 @@ export function PostForm({ initialPost }: PostFormProps) {
     const fd = new FormData()
     fd.set('title', data.title)
     fd.set('body', data.body)
+    fd.set('visibility', data.visibility)
 
     startTransition(async () => {
       const result = isEditing
@@ -77,6 +79,18 @@ export function PostForm({ initialPost }: PostFormProps) {
           onChange={(v) => setValue('body', v, { shouldValidate: true })}
         />
         {errors.body && <p className="text-sm text-red-500">{errors.body.message}</p>}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="visibility">Visibility</Label>
+        <select
+          id="visibility"
+          {...register('visibility')}
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="public">Public</option>
+          <option value="draft">Draft (only you)</option>
+        </select>
       </div>
 
       {errors.root && <p className="text-sm text-red-500">{errors.root.message}</p>}

@@ -31,7 +31,7 @@ export default async function AdminEditPostPage({ params }: PageProps) {
           </button>
         </form>
       </div>
-      <PostForm initialPost={{ id: post.id, title: post.title, body: post.body }} />
+      <PostForm initialPost={{ id: post.id, title: post.title, body: post.body, visibility: post.visibility }} />
     </main>
   )
 }

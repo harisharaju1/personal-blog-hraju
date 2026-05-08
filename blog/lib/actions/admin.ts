@@ -41,7 +41,7 @@ export async function updatePostAction(postId: number, formData: FormData): Prom
 
   const { error } = await supabase
     .from('posts')
-    .update({ title: parsed.data.title, body: parsed.data.body })
+    .update({ title: parsed.data.title, body: parsed.data.body, visibility: parsed.data.visibility })
     .eq('id', postId)
     .eq('author_id', user.id)
 
@@ -80,7 +80,7 @@ export async function createPostAction(formData: FormData): Promise<ActionResult
 
   const { data, error } = await supabase
     .from('posts')
-    .insert({ author_id: user.id, title: parsed.data.title, body: parsed.data.body })
+    .insert({ author_id: user.id, title: parsed.data.title, body: parsed.data.body, visibility: parsed.data.visibility })
     .select('id')
     .single()
 

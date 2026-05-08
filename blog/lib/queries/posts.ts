@@ -13,9 +13,10 @@ export type PostWithAuthor = {
   created_at: string
   author_id: string
   author_username: string
+  visibility: string
 }
 
-const SELECT_FIELDS = 'id, title, body, score, created_at, author_id, profiles!posts_author_id_fkey(username)' as const
+const SELECT_FIELDS = 'id, title, body, score, created_at, author_id, visibility, profiles!posts_author_id_fkey(username)' as const
 
 // Set via BLOG_AUTHOR_USER_ID in .env.local / Vercel env vars (Supabase user UUID)
 const BLOG_AUTHOR_USER_ID = process.env.BLOG_AUTHOR_USER_ID ?? ''
@@ -27,6 +28,7 @@ function mapRow(row: {
   score: number | null
   created_at: string | null
   author_id: string | null
+  visibility: string | null
   profiles: { username: string } | { username: string }[] | null
 }): PostWithAuthor {
   const profiles = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
@@ -38,6 +40,7 @@ function mapRow(row: {
     created_at: row.created_at!,
     author_id: row.author_id!,
     author_username: profiles?.username ?? '[deleted]',
+    visibility: row.visibility ?? 'public',
   }
 }
 
@@ -49,6 +52,7 @@ export async function listPosts(sort: SortKey = 'hot'): Promise<PostWithAuthor[]
       .from('posts_hot')
       .select(SELECT_FIELDS)
       .eq('author_id', BLOG_AUTHOR_USER_ID)
+      .eq('visibility', 'public')
       .order('hot_rank', { ascending: false })
       .limit(50)
     return (data ?? []).map(mapRow)
@@ -59,6 +63,7 @@ export async function listPosts(sort: SortKey = 'hot'): Promise<PostWithAuthor[]
       .from('posts')
       .select(SELECT_FIELDS)
       .eq('author_id', BLOG_AUTHOR_USER_ID)
+      .eq('visibility', 'public')
       .order('score', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(50)
@@ -70,6 +75,7 @@ export async function listPosts(sort: SortKey = 'hot'): Promise<PostWithAuthor[]
     .from('posts')
     .select(SELECT_FIELDS)
     .eq('author_id', BLOG_AUTHOR_USER_ID)
+    .eq('visibility', 'public')
     .order('created_at', { ascending: false })
     .limit(50)
   return (data ?? []).map(mapRow)
